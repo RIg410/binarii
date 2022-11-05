@@ -21,6 +21,10 @@ impl Wire {
     pub fn get(&self) -> bool {
         self.value.get()
     }
+
+    pub fn id(&self) -> usize {
+        Rc::as_ptr(&self.value) as *const () as usize
+    }
 }
 
 impl Default for Wire {

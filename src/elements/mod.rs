@@ -1,6 +1,6 @@
 pub mod bus;
 pub mod complex;
-pub mod key;
+pub mod gate;
 pub mod wire;
 
 pub trait Conduct {
