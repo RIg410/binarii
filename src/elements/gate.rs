@@ -32,6 +32,17 @@ impl Gate {
         gate
     }
 
+    pub fn xor(in_1: Wire, in_2: Wire, out: Wire) -> Self {
+        let gate = Self {
+            in_1,
+            in_2,
+            out,
+            act: |in_1, in_2| in_1 ^ in_2,
+        };
+        gate.conduct();
+        gate
+    }
+
     pub fn not(in_1: Wire, out: Wire) -> Self {
         let gate = Self {
             in_1,
