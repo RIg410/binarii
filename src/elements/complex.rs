@@ -298,7 +298,7 @@ impl Debug for Element {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use crate::elements::bus::{Bus, BusAccess};
     use crate::elements::complex::Complex;
     use crate::elements::gate::Gate;
@@ -585,9 +585,9 @@ mod tests {
 
     pub fn byte_sum() -> Complex {
         let mut sum_block = Complex::new("byte_sum");
-        let mut a = Bus::new(8);
-        let mut b = Bus::new(8);
-        let mut res = Bus::new(9);
+        let a = Bus::new(8);
+        let b = Bus::new(8);
+        let res = Bus::new(9);
 
         let mut carry = Wire::new();
         sum_block.add_input_bus(a.clone());
@@ -606,7 +606,6 @@ mod tests {
         }
 
         sum_block.set_out(8, carry.clone());
-        res.set_wire(8, carry);
         sum_block.conduct();
         sum_block
     }
@@ -620,14 +619,18 @@ mod tests {
         let res = sum.get_out_bus(0, 8);
         let carry_out = sum.get_out(8);
 
-        a.set(0, 251);
-        b.set(0, 6);
-        carry_in.set(false);
-        sum.conduct();
-
-        println!("res: {}", res);
-        let res: u8 = res.get(0);
-        println!("res: {}", res);
-        println!("{}", carry_out);
+        for i in 0..255u8 {
+            for j in 0..255u8 {
+                a.set(0, i);
+                b.set(0, j);
+                carry_in.set(false);
+                sum.conduct();
+                let res: u8 = res.get(0);
+                let carry = carry_out.get();
+                let (expected_sum, expected_carry) = i.overflowing_add(j);
+                assert_eq!(res, expected_sum);
+                assert_eq!(carry, expected_carry);
+            }
+        }
     }
 }
