@@ -222,14 +222,6 @@ impl Conduct for Complex {
 
 impl Debug for Complex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let map = |w: &Wire| {
-            if w.get() {
-                "1"
-            } else {
-                "0"
-            }
-        };
-
         writeln!(f, "[")?;
         for gate in &self.gates {
             writeln!(f, "{}", gate)?;
@@ -245,11 +237,11 @@ impl Debug for Complex {
         writeln!(f, "ITERS:{}", self.iters_per_tick)?;
         write!(f, "{}(", self.tp)?;
         for i in &self.input {
-            write!(f, "{},", map(i))?;
+            write!(f, "{},", i)?;
         }
         write!(f, ")->(")?;
         for i in &self.output {
-            write!(f, "{},", map(i))?;
+            write!(f, "{},", i)?;
         }
         writeln!(f, ")")
     }
@@ -257,21 +249,13 @@ impl Debug for Complex {
 
 impl Display for Complex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let map = |w: &Wire| {
-            if w.get() {
-                "1"
-            } else {
-                "0"
-            }
-        };
-
         write!(f, "{}(", self.tp)?;
         for i in &self.input {
-            write!(f, "{},", map(i))?;
+            write!(f, "{},", i)?;
         }
         write!(f, ")->(")?;
         for i in &self.output {
-            write!(f, "{},", map(i))?;
+            write!(f, "{},", i)?;
         }
         writeln!(f, ")")
     }
@@ -576,4 +560,13 @@ mod tests {
         assert_eq!(wire_s.get(), true);
         assert_eq!(wire_c.get(), true);
     }
+
+    pub fn byte_sum() -> Complex {
+        let sum = Complex::new("byte_sum");
+
+        sum
+    }
+
+    #[test]
+    pub fn test_byte_sum() {}
 }

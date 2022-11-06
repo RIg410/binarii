@@ -111,13 +111,6 @@ impl Gate {
 
 impl Display for Gate {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let map = |w: &Wire| {
-            if w.get() {
-                "1"
-            } else {
-                "0"
-            }
-        };
         writeln!(
             f,
             "IN:{:#x}\nIN:{:#x}\nOUT:{:#x}",
@@ -125,14 +118,7 @@ impl Display for Gate {
             self.in_2.id(),
             self.out.id()
         )?;
-        writeln!(
-            f,
-            "{}({}, {})->{}",
-            self.tp,
-            map(&self.in_1),
-            map(&self.in_2),
-            map(&self.out)
-        )
+        writeln!(f, "{}({}, {})->{}", self.tp, self.in_1, self.in_2, self.out)
     }
 }
 

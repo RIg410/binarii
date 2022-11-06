@@ -1,5 +1,5 @@
 use std::cell::Cell;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
@@ -36,5 +36,15 @@ impl PartialEq for Wire {
 impl Default for Wire {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Display for Wire {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.get() {
+            write!(f, "1")
+        } else {
+            write!(f, "0")
+        }
     }
 }
