@@ -1,3 +1,4 @@
+use crate::elements::bus::Bus;
 use crate::elements::gate::Gate;
 use crate::elements::wire::Wire;
 use crate::elements::Conduct;
@@ -60,10 +61,22 @@ impl Complex {
         id
     }
 
+    pub fn add_input_bus(&mut self, bus: Bus) {
+        for wire in bus.wires() {
+            self.add_input(wire.clone());
+        }
+    }
+
     pub fn add_output(&mut self, wire: Wire) -> usize {
         let id = self.output.len();
         self.output.push(wire);
         id
+    }
+
+    pub fn add_output_bus(&mut self, bus: Bus) {
+        for wire in bus.wires() {
+            self.add_output(wire.clone());
+        }
     }
 
     pub fn add_key(&mut self, key: Gate) -> usize {
@@ -86,6 +99,14 @@ impl Complex {
 
     pub fn get_in(&self, wire_id: usize) -> Wire {
         self.input[wire_id].clone()
+    }
+
+    pub fn get_in_bus(&self, offset: usize, len: usize) -> Bus {
+        Bus::with_wires(self.input[offset..offset + len].to_vec())
+    }
+
+    pub fn get_out_bus(&self, offset: usize, len: usize) -> Bus {
+        Bus::with_wires(self.output[offset..offset + len].to_vec())
     }
 
     pub fn set_in(&mut self, wire_id: usize, wire: Wire) {
@@ -224,7 +245,7 @@ impl Debug for Complex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "[")?;
         for gate in &self.gates {
-            writeln!(f, "{}", gate)?;
+            writeln!(f, "{:?}", gate)?;
         }
         writeln!(f, "]")?;
 
@@ -278,6 +299,7 @@ impl Debug for Element {
 
 #[cfg(test)]
 mod tests {
+    use crate::elements::bus::{Bus, BusAccess};
     use crate::elements::complex::Complex;
     use crate::elements::gate::Gate;
     use crate::elements::wire::Wire;
@@ -562,11 +584,50 @@ mod tests {
     }
 
     pub fn byte_sum() -> Complex {
-        let sum = Complex::new("byte_sum");
+        let mut sum_block = Complex::new("byte_sum");
+        let mut a = Bus::new(8);
+        let mut b = Bus::new(8);
+        let mut res = Bus::new(9);
 
-        sum
+        let mut carry = Wire::new();
+        sum_block.add_input_bus(a.clone());
+        sum_block.add_input_bus(b.clone());
+        sum_block.add_input(carry.clone());
+        sum_block.add_output_bus(res.clone());
+
+        for i in (0..8).rev() {
+            let mut bit = sum();
+            bit.set_in(0, a.get_wire(i));
+            bit.set_in(1, b.get_wire(i));
+            bit.set_in(2, carry);
+            bit.set_out(0, res.get_wire(i));
+            carry = bit.get_out(1);
+            sum_block.add_complex(bit);
+        }
+
+        sum_block.set_out(8, carry.clone());
+        res.set_wire(8, carry);
+        sum_block.conduct();
+        sum_block
     }
 
     #[test]
-    pub fn test_byte_sum() {}
+    pub fn test_byte_sum() {
+        let sum = byte_sum();
+        let a = sum.get_in_bus(0, 8);
+        let b = sum.get_in_bus(8, 8);
+        let carry_in = sum.get_in(16);
+        let res = sum.get_out_bus(0, 8);
+        let carry_out = sum.get_out(8);
+
+        a.set(0, 251);
+        b.set(0, 6);
+        carry_in.set(false);
+        sum.conduct();
+
+        println!("res: {}", res);
+        let res: u8 = res.get(0);
+        println!("res: {}", res);
+        println!("{}", carry_out);
+    }
 }

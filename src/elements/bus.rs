@@ -1,7 +1,7 @@
 use crate::elements::wire::Wire;
 use std::fmt::Display;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Bus {
     wires: Vec<Wire>,
 }
@@ -11,6 +11,10 @@ impl Bus {
         Self {
             wires: (0..wires).map(|_| Wire::new()).collect(),
         }
+    }
+
+    pub fn with_wires(wires: Vec<Wire>) -> Self {
+        Self { wires }
     }
 
     pub fn get_wire(&self, index: usize) -> Wire {
@@ -27,6 +31,10 @@ impl Bus {
 
     pub fn add_wire(&mut self, wire: Wire) {
         self.wires.push(wire);
+    }
+
+    pub fn wires(&self) -> &[Wire] {
+        &self.wires
     }
 
     pub fn size(&self) -> usize {
@@ -90,7 +98,6 @@ mod test {
     #[test]
     pub fn test_set_u8() {
         use crate::elements::bus::Bus;
-        use crate::elements::wire::Wire;
         let bus = Bus::new(8);
         let b: u8 = bus.get(0);
         assert_eq!(b, 0);
