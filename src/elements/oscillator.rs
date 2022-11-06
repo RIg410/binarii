@@ -53,7 +53,7 @@ mod tests {
     #[test]
     pub fn test_oscillator() {
         let wire_out = Wire::new();
-        let mut osc = Oscillator::new(wire_out.clone(), 2);
+        let osc = Oscillator::new(wire_out.clone(), 2);
         assert_eq!(wire_out.get(), false);
         osc.conduct();
         assert_eq!(wire_out.get(), false);
@@ -72,7 +72,7 @@ mod tests {
     #[test]
     pub fn test_oscillator_1() {
         let wire_out = Wire::new();
-        let mut osc = Oscillator::new(wire_out.clone(), 1);
+        let osc = Oscillator::new(wire_out.clone(), 1);
         assert_eq!(wire_out.get(), false);
         osc.conduct();
         assert_eq!(wire_out.get(), true);

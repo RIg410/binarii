@@ -27,6 +27,12 @@ impl Wire {
     }
 }
 
+impl PartialEq for Wire {
+    fn eq(&self, other: &Self) -> bool {
+        self.id().eq(&other.id())
+    }
+}
+
 impl Default for Wire {
     fn default() -> Self {
         Self::new()

@@ -1,5 +1,6 @@
 use crate::elements::wire::Wire;
 use crate::elements::Conduct;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone)]
 pub struct Gate {
@@ -7,6 +8,7 @@ pub struct Gate {
     in_2: Wire,
     out: Wire,
     act: fn(bool, bool) -> bool,
+    tp: &'static str,
 }
 
 impl Gate {
@@ -16,6 +18,7 @@ impl Gate {
             in_2,
             out,
             act: |in_1, in_2| in_1 && in_2,
+            tp: "and",
         };
         gate.conduct();
         gate
@@ -27,6 +30,7 @@ impl Gate {
             in_2,
             out,
             act: |in_1, in_2| in_1 || in_2,
+            tp: "or",
         };
         gate.conduct();
         gate
@@ -38,6 +42,7 @@ impl Gate {
             in_2,
             out,
             act: |in_1, in_2| in_1 ^ in_2,
+            tp: "xor",
         };
         gate.conduct();
         gate
@@ -49,6 +54,7 @@ impl Gate {
             in_2: Wire::new(),
             out,
             act: |in_1, _| !in_1,
+            tp: "not",
         };
         gate.conduct();
         gate
@@ -60,6 +66,7 @@ impl Gate {
             in_2,
             out,
             act: |in_1, in_2| !(in_1 || in_2),
+            tp: "nor",
         };
         gate.conduct();
         gate
@@ -71,6 +78,7 @@ impl Gate {
             in_2,
             out,
             act: |in_1, in_2| !(in_1 && in_2),
+            tp: "nand",
         };
         gate.conduct();
         gate
@@ -98,6 +106,33 @@ impl Gate {
 
     pub fn get_out(&self) -> Wire {
         self.out.clone()
+    }
+}
+
+impl Display for Gate {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let map = |w: &Wire| {
+            if w.get() {
+                "1"
+            } else {
+                "0"
+            }
+        };
+        writeln!(
+            f,
+            "IN:{:#x}\nIN:{:#x}\nOUT:{:#x}",
+            self.in_1.id(),
+            self.in_2.id(),
+            self.out.id()
+        )?;
+        writeln!(
+            f,
+            "{}({}, {})->{}",
+            self.tp,
+            map(&self.in_1),
+            map(&self.in_2),
+            map(&self.out)
+        )
     }
 }
 
