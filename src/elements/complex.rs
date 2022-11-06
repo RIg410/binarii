@@ -2,7 +2,8 @@ use crate::elements::gate::Gate;
 use crate::elements::wire::Wire;
 use crate::elements::Conduct;
 use bevy::utils::HashMap;
-use std::collections::HashSet;
+use std::collections::BTreeMap;
+use std::fmt::Display;
 use std::mem;
 
 pub struct Complex {
@@ -14,6 +15,22 @@ pub struct Complex {
 pub enum Element {
     Key(Gate),
     Complex(Complex),
+}
+
+impl Element {
+    pub fn input(&self) -> Vec<Wire> {
+        match self {
+            Element::Key(gate) => vec![gate.get_in_1(), gate.get_in_2()],
+            Element::Complex(complex) => complex.input.clone(),
+        }
+    }
+
+    pub fn output(&self) -> Vec<Wire> {
+        match self {
+            Element::Key(gate) => vec![gate.get_out()],
+            Element::Complex(complex) => complex.output.clone(),
+        }
+    }
 }
 
 impl Conduct for Element {
@@ -74,8 +91,53 @@ impl Complex {
 
     pub fn compile(&mut self) {
         let mut gates = Vec::new();
-        let mut executed = HashSet::new();
-        let mapping = mem::take(&mut self.gates);
+        let mut mapping = mem::take(&mut self.gates)
+            .into_iter()
+            .enumerate()
+            .collect::<BTreeMap<usize, Element>>();
+
+        loop {
+            let gate = if let Some(key) = mapping.keys().next().cloned() {
+                mapping.remove(&key).unwrap()
+            } else {
+                break;
+            };
+
+            gates.push(gate);
+        }
+        self.gates = gates;
+    }
+
+    fn map(&self, gates: &mut Vec<Element>, elements: &mut HashMap<usize, Element>, key: usize) {
+        let element = if let Some(element) = elements.remove(&key) {
+            element
+        } else {
+            return;
+        };
+
+        let input = element.input();
+
+        for wire in input.iter() {
+            if self.input.iter().any(|w| w.id() == wire.id()) {
+                continue;
+            }
+
+            let element_to_handle = elements.iter().find_map(|(key, wal)| {
+                wal.output().iter().find_map(|w| {
+                    if w.id() == wire.id() {
+                        Some(*key)
+                    } else {
+                        None
+                    }
+                })
+            });
+
+            if let Some(key) = element_to_handle {
+                self.map(gates, elements, key);
+            }
+        }
+
+        gates.push(element);
     }
 }
 
@@ -84,6 +146,22 @@ impl Conduct for Complex {
         for key in &self.gates {
             key.conduct();
         }
+    }
+}
+
+impl Display for Complex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (idx, i) in self.input.iter().enumerate() {
+            let val = if i.get() { "1" } else { "0" };
+            writeln!(f, "IN_{}: {}", idx, val)?;
+        }
+
+        for (idx, o) in self.output.iter().enumerate() {
+            let val = if o.get() { "1" } else { "0" };
+            writeln!(f, "OUT_{}: {}", idx, val)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -131,9 +209,27 @@ mod tests {
         complex
     }
 
+    pub fn rs_trigger() -> Complex {
+        let mut complex = Complex::new();
+        let wire_r = Wire::new();
+        let wire_s = Wire::new();
+        let wire_q = Wire::new();
+        let wire_qn = Wire::new();
+
+        complex.add_input(wire_r.clone());
+        complex.add_input(wire_s.clone());
+        complex.add_output(wire_q.clone());
+        complex.add_output(wire_qn.clone());
+
+        complex.add_key(Gate::nor(wire_r.clone(), wire_qn.clone(), wire_q.clone()));
+        complex.add_key(Gate::nor(wire_s.clone(), wire_q.clone(), wire_qn.clone()));
+
+        complex
+    }
+
     #[test]
     pub fn test_not() {
-        let mut complex = not();
+        let complex = not();
         let in_1 = complex.get_in(0);
         let out = complex.get_out(0);
         assert_eq!(out.get(), true);
@@ -144,7 +240,7 @@ mod tests {
 
     #[test]
     pub fn test_or() {
-        let mut complex = or();
+        let complex = or();
         assert_eq!(complex.get_out(0).get(), false);
         complex.get_in(0).set(true);
         complex.conduct();
@@ -163,7 +259,7 @@ mod tests {
 
     #[test]
     pub fn test_and_2() {
-        let mut complex = and();
+        let complex = and();
         let wire_1 = complex.get_in(0);
         let wire_2 = complex.get_in(1);
         let wire_out = complex.get_out(0);
@@ -210,19 +306,5 @@ mod tests {
         wire_1.set(false);
         and_3.conduct();
         assert_eq!(and_3.get_out(0).get(), false);
-    }
-
-    #[test]
-    pub fn test_rs_trigger() {
-        let mut complex = Complex::new();
-        let wire_r = Wire::new();
-        let wire_s = Wire::new();
-        let wire_q = Wire::new();
-        let wire_qn = Wire::new();
-
-        let inner_1 = Wire::new();
-        let inner_2 = Wire::new();
-
-        // Gate::new_or(wire_r.clone(), inner_2.clone(), inner_1.clone());
     }
 }

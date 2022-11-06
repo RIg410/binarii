@@ -77,6 +77,14 @@ impl Gate {
         self.out = wire;
     }
 
+    pub fn get_in_1(&self) -> Wire {
+        self.in_1.clone()
+    }
+
+    pub fn get_in_2(&self) -> Wire {
+        self.in_2.clone()
+    }
+
     pub fn get_out(&self) -> Wire {
         self.out.clone()
     }
@@ -108,7 +116,7 @@ mod test {
         let wire_1 = Wire::new();
         let wire_2 = Wire::new();
         let wire_out = Wire::new();
-        let mut key = Gate::and(wire_1.clone(), wire_2.clone(), wire_out.clone());
+        let key = Gate::and(wire_1.clone(), wire_2.clone(), wire_out.clone());
         assert_eq!(wire_out.get(), false);
         wire_1.set(true);
         wire_2.set(true);
@@ -126,7 +134,7 @@ mod test {
         let wire_1 = Wire::new();
         let wire_2 = Wire::new();
         let wire_out = Wire::new();
-        let mut key = Gate::or(wire_1.clone(), wire_2.clone(), wire_out.clone());
+        let key = Gate::or(wire_1.clone(), wire_2.clone(), wire_out.clone());
         assert_eq!(wire_out.get(), false);
         wire_1.set(true);
         wire_2.set(true);
@@ -144,7 +152,7 @@ mod test {
     pub fn test_not() {
         let in_1 = Wire::new();
         let out = Wire::new();
-        let mut key = Gate::not(in_1.clone(), out.clone());
+        let key = Gate::not(in_1.clone(), out.clone());
         assert_eq!(out.get(), true);
         in_1.set(true);
         key.conduct();
